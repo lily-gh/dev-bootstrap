@@ -1,0 +1,13 @@
+---
+
+- name: Install apps on Arch
+  kewlfft.aur.aur:
+    use: yay
+    state: present
+    name:
+      - telegram-desktop
+      - 1password
+      - visual-studio-code-bin
+      - vlc
+  become: yes
+  become_user: aur_builder

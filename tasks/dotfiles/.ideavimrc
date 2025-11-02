@@ -1,0 +1,8 @@
+set nu
+set showmode
+
+let mapleader = "\<SPACE>"
+vnoremap <leader>p "_dP
+
+Plug 'machakann/vim-highlightedyank'
+Plug 'tpope/vim-surround'

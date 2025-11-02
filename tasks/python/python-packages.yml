@@ -1,0 +1,33 @@
+---
+
+- name: Check for required Python packages
+  ansible.builtin.command: conda run -n PyEnv3.9 pip show {{ item }}
+  with_items:
+    - pyperclip
+    - beautifulsoup4
+    - requests
+    - pyyaml
+  register: packages_check
+  ignore_errors: yes
+  failed_when: false
+
+- name: Install missing Python packages
+  ansible.builtin.shell: |
+    conda run -n PyEnv3.9 pip install {{ missing_packages | join(' ') }}
+  args:
+    executable: /bin/zsh
+  environment:
+    PATH: "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/miniconda/bin"
+  when: packages_check.results | selectattr('rc', '!=', 0) | list | length > 0
+  vars:
+    missing_packages: "{{ packages_check.results | selectattr('rc', '!=', 0) | map(attribute='item') | list }}"
+
+# on macOS it is installed via brew
+- name: Install yt-dlp on Ubuntu
+  ansible.builtin.shell: |
+    conda run -n PyEnv3.9 pip install yt-dlp
+  args:
+    executable: /bin/zsh
+  environment:
+    PATH: "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/miniconda/bin"
+  when: ansible_facts['os_family'] == 'Debian'

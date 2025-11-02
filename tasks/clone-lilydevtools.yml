@@ -1,0 +1,25 @@
+---
+- name: Setup lilydevtools repository
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Ensure ~/projects directory exists
+      ansible.builtin.file:
+        path: ~/projects
+        state: directory
+        mode: '0755'
+
+    - name: Clone lilydevtools repository
+      ansible.builtin.git:
+        repo: git@github.com:lily-gh/lilydevtools.git
+        dest: ~/projects/lilydevtools
+        version: main
+        key_file: ~/.ssh/id_lily
+        update: yes
+
+    - name: Execute lilydevtools setup script
+      ansible.builtin.shell:
+        cmd: ~/projects/lilydevtools/setup.sh
+        executable: /bin/bash
+      when: lookup('file', '~/projects/lilydevtools/setup.sh', errors='ignore') | length > 0

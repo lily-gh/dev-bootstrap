@@ -1,0 +1,32 @@
+---
+
+- name: Ensure Maple font directories exists
+  ansible.builtin.file:
+    path: $HOME/Maple
+    state: directory
+    mode: '0755'
+
+- name: Download Maple Fonts archive
+  ansible.builtin.get_url:
+    url: "https://github.com/subframe7536/maple-font/releases/download/v7.0-beta33/MapleMonoNL-NF-unhinted.zip"
+    dest: "$HOME/Maple.zip"
+
+- name: Extract Maple Fonts archive
+  ansible.builtin.unarchive:
+    src: "$HOME/Maple.zip"
+    dest: $HOME/Maple
+    remote_src: yes
+
+- name: Copy specific font files to fonts directory
+  ansible.builtin.copy:
+    src: "{{ ansible_env.HOME }}/Maple/{{ item }}"
+    dest: "{{ font_dest }}/"
+    remote_src: yes
+  with_items:
+    - MapleMonoNL-NF-Regular.ttf
+    - MapleMonoNL-NF-Medium.ttf
+
+- name: Remove font archive
+  ansible.builtin.file:
+    path: "$HOME/Maple.zip"
+    state: absent

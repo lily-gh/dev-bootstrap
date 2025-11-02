@@ -1,0 +1,27 @@
+---
+- name: Main Playbook
+  hosts: localhost
+  gather_facts: true
+
+  tasks:
+    - name: Include macOS tasks
+      include_tasks: tasks/macos-packages.yml
+      when: ansible_facts['os_family'] == 'Darwin'
+
+    - name: Include Ubuntu tasks
+      include_tasks: tasks/ubuntu-packages.yml
+      when: ansible_facts['os_family'] == 'Debian'
+  
+    - name: Include Arch tasks
+      include_tasks: tasks/arch-packages.yml
+      when: ansible_facts['os_family'] == 'Archlinux'
+
+- import_playbook: tasks/ohmyzsh.yml
+- import_playbook: tasks/dotfiles.yml
+- import_playbook: tasks/zoxide.yml
+- import_playbook: tasks/nerdfonts.yml
+- import_playbook: tasks/asdf.yml
+- import_playbook: tasks/install-python.yml
+
+- import_playbook: tasks/install-apps.yml
+- import_playbook: tasks/neovim.yml

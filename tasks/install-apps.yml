@@ -1,0 +1,17 @@
+---
+- name: Install Apps
+  hosts: localhost
+  gather_facts: true
+  
+  tasks:
+    - name: Include macOS apps
+      include_tasks: apps-macos.yml
+      when: ansible_facts['os_family'] == 'Darwin'
+
+    - name: Include Ubuntu apps
+      include_tasks: apps-ubuntu.yml
+      when: ansible_facts['os_family'] == 'Debian'
+  
+    - name: Include Arch apps
+      include_tasks: apps-arch.yml
+      when: ansible_facts['os_family'] == 'Archlinux'

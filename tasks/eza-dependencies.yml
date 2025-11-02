@@ -1,0 +1,41 @@
+---
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+  become: true
+
+- name: Install packages on Ubuntu/WSL
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - curl
+    - gpg
+  become: true
+
+- name: Ensure keyring directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Download and install the GPG key for eza (force overwrite)
+  ansible.builtin.shell: |
+    yes | curl -sSL https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | gpg --dearmor > /etc/apt/keyrings/gierens.gpg
+  become: true
+
+- name: Add eza repository to sources list
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/gierens.list
+    content: "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main"
+    mode: '0644'
+  become: true
+
+- name: Ensure keyring file has correct permissions
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/gierens.gpg
+    mode: '0644'
+  become: true
+    

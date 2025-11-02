@@ -1,0 +1,65 @@
+---
+
+- name: Update pacman cache
+  community.general.pacman:
+    update_cache: yes
+  become: true
+
+- name: Install packages
+  community.general.pacman:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - curl
+    - unzip
+    - bat
+    - ffmpeg
+    - fzf
+    - gcc
+    - git
+    - pcre2
+    - eza
+    - vim
+    - zsh
+    - xclip
+    - wget
+  become: true
+
+- name: Install base-devel (required for AUR packages)
+  community.general.pacman:
+    name: base-devel
+    state: present
+  become: true
+
+- name: Create the `aur_builder` user
+  become: yes
+  ansible.builtin.user:
+    name: aur_builder
+    create_home: yes
+    group: wheel
+
+- name: Allow the `aur_builder` user to run `sudo pacman` without a password
+  become: yes
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/11-install-aur_builder
+    line: 'aur_builder ALL=(ALL) NOPASSWD: /usr/bin/pacman'
+    create: yes
+    mode: 0644
+    validate: 'visudo -cf %s'
+
+- name: Install yay
+  kewlfft.aur.aur:
+    use: makepkg
+    name:
+      - yay
+  become: yes
+  become_user: aur_builder
+
+- name: Install asdf on Arch
+  kewlfft.aur.aur:
+    use: yay
+    state: present
+    name:
+      - asdf-vm
+  become: yes
+  become_user: aur_builder

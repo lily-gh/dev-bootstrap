@@ -1,0 +1,54 @@
+
+---
+- name: Setup Python Environment
+  hosts: localhost
+  gather_facts: true
+
+  tasks:
+    - name: Install Miniconda on Ubuntu/Arch
+      include_tasks: python/conda-ubuntu.yml
+      when: ansible_facts['os_family'] != 'Darwin'
+    
+    - name: Install Miniconda on MacOS
+      include_tasks: python/conda-macos.yml
+      when: ansible_facts['os_family'] == 'Darwin'
+
+    - name: Check if conda is already initialized in .zshrc
+      ansible.builtin.command: grep -q 'conda_setup' "{{ ansible_env.HOME }}/.zshrc"
+      register: conda_init_check
+      failed_when: false
+      changed_when: false
+
+    - name: Initialize conda if not already done
+      ansible.builtin.shell: conda init zsh
+      when: conda_init_check.rc != 0
+      environment:
+        PATH: "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/miniconda/bin"
+
+    - name: Check if the PyEnv3.9 conda environment exists
+      ansible.builtin.shell: conda env list | grep -q 'PyEnv3.9'
+      register: conda_env_check
+      failed_when: false
+      changed_when: false
+      environment:
+        PATH: "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/miniconda/bin"
+
+    - name: Create Python 3.9 environment
+      ansible.builtin.shell: conda create --name PyEnv3.9 python=3.9 -y
+      when: conda_env_check.rc != 0
+      environment:
+        PATH: "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/miniconda/bin"
+        CONDA_PLUGINS_AUTO_ACCEPT_TOS: "true"
+      
+    - name: Append conda activate to ~/.zshrc
+      ansible.builtin.lineinfile:
+        path: "{{ ansible_env.HOME }}/.zshrc"
+        line: 'conda activate PyEnv3.9'
+        create: yes
+      when: 
+        - ansible_env.HOME is defined
+        - "'conda activate PyEnv3.9' not in lookup('file', ansible_env.HOME + '/.zshrc', errors='ignore')"
+
+    - name: Install required Python packages
+      include_tasks: python/python-packages.yml
+      

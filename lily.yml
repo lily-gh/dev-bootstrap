@@ -1,0 +1,8 @@
+---
+- name: Lily's Playbook - setup Lily's personal things
+  hosts: localhost
+  gather_facts: true
+
+# Lily-specific stuff 💖
+- import_playbook: tasks/setup-ssh.yml
+- import_playbook: tasks/clone-lilydevtools.yml

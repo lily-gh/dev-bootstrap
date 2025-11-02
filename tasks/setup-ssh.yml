@@ -1,0 +1,43 @@
+---
+- name: Setup SSH for GitHub access
+  hosts: localhost
+  vars:
+    ssh_keys:
+      - { src: ../keys/id_lily, dest: ~/.ssh/id_lily, mode: '0600' }
+      - { src: ../keys/id_lily.pub, dest: ~/.ssh/id_lily.pub, mode: '0644' }
+
+  tasks:
+    - name: Ensure ~/.ssh directory exists
+      ansible.builtin.file:
+        path: ~/.ssh
+        state: directory
+        mode: '0700'
+
+    - name: Decrypt and copy SSH keys
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "{{ item.mode }}"
+      loop: "{{ ssh_keys }}"
+
+    - name: Add SSH key to the SSH agent
+      ansible.builtin.shell: |
+        eval "$(ssh-agent -s)"
+        ssh-add ~/.ssh/id_lily
+
+    - name: Ensure Git uses the SSH key
+      ansible.builtin.lineinfile:
+        path: ~/.ssh/config
+        line: |
+          Host github.com
+            HostName github.com
+            User git
+            IdentityFile ~/.ssh/id_lily
+            AddKeysToAgent yes
+        create: yes
+
+    - name: Add GitHub's SSH key to known_hosts
+      ansible.builtin.shell: |
+        ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+      args:
+        creates: ~/.ssh/known_hosts

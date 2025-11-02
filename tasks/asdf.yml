@@ -1,0 +1,55 @@
+---
+- name: Install asdf
+  hosts: localhost
+  gather_facts: true
+
+  tasks:
+    - name: Include Ubuntu-specific asdf tasks
+      ansible.builtin.include_tasks: asdf-ubuntu.yml
+      when: ansible_os_family == "Debian"    
+
+    - name: Set asdf binary path for macOS
+      ansible.builtin.set_fact:
+        asdf_path: "/opt/homebrew/bin:{{ ansible_env.PATH }}"
+      when: ansible_os_family == "Darwin"
+    
+    - name: Set asdf binary path for Ubuntu
+      ansible.builtin.set_fact:
+        asdf_path: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+      when: ansible_os_family == "Debian"
+    
+    - name: Set asdf binary path for Arch
+      ansible.builtin.set_fact:
+        asdf_path: ":{{ ansible_env.PATH }}"
+      when: ansible_os_family == "Archlinux"
+    
+    - name: Add asdf shims to PATH in ~/.zshrc
+      ansible.builtin.lineinfile:
+        path: "{{ ansible_env.HOME }}/.zshrc"
+        line: 'export PATH="$HOME/.asdf/shims:$PATH"'
+        create: yes
+      when: 
+        - "'/.asdf/shims' not in lookup('file', ansible_env.HOME + '/.zshrc', errors='ignore')"
+
+    - name: Add Node.js plugin
+      ansible.builtin.shell: asdf plugin add nodejs
+      environment:
+        PATH: "{{ asdf_path }}"
+
+    - name: Install Node.js latest version
+      ansible.builtin.shell: asdf install nodejs latest
+      args:
+        executable: /bin/zsh
+      environment:
+        PATH: "{{ asdf_path }}"
+
+    - name: Get latest Node.js version
+      ansible.builtin.shell: asdf list nodejs | grep -v "No versions" | tail -1 | tr -d ' '
+      register: nodejs_latest_version
+      environment:
+        PATH: "{{ asdf_path }}"
+
+    - name: Set global Node.js version
+      ansible.builtin.shell: asdf set nodejs {{ nodejs_latest_version.stdout }} --home
+      environment:
+        PATH: "{{ asdf_path }}"

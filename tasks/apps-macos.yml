@@ -1,0 +1,35 @@
+---
+
+- name: Install Apps
+  community.general.homebrew_cask:
+    name: "{{ item }}"
+    path: /opt/homebrew/bin
+    state: present
+  ignore_errors: yes
+  with_items:
+    - 1password
+    - iterm2
+    - telegram
+    - visual-studio-code
+    - vlc
+    - microsoft-edge
+    - slack
+
+- name: Ensure iTerm2 preferences directory exists
+  file:
+    path: "~/Library/Application Support/iTerm2/DynamicProfiles"
+    state: directory
+    mode: '0755'
+
+- name: Copy iTerm2 profile configuration
+  copy:
+    src: "{{ playbook_dir }}/misc/Lily-iterm2.json"
+    dest: "~/Library/Application Support/iTerm2/DynamicProfiles/Lily-iterm2.json"
+    mode: '0644'
+
+- name: Set Lily-iterm2 as default profile for iTerm2
+  community.general.osx_defaults:
+    domain: com.googlecode.iterm2
+    key: "Default Bookmark Guid"
+    type: string
+    value: "64D0A678-CB5D-412C-91A9-1A27D0000D04"

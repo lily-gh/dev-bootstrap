@@ -1,0 +1,53 @@
+---
+- name: Install Nerdfonts
+  hosts: localhost
+  gather_facts: true
+
+  tasks:
+    - name: Set font destination based on OS
+      ansible.builtin.set_fact:
+        font_dest: >-
+          {{
+            (ansible_facts['os_family'] == 'Darwin') | ternary(ansible_env.HOME + '/Library/Fonts', ansible_env.HOME + '/.local/share/fonts')
+          }}
+
+    - name: Determine archive file extension based on OS
+      ansible.builtin.set_fact:
+        archive_extension: >-
+          {{
+            (ansible_facts['os_family'] == 'Darwin') | ternary('zip', 'tar.xz')
+          }}
+
+    - name: Check if any Meslo* files exist in font directory
+      ansible.builtin.find:
+        paths: "{{ font_dest }}"
+        patterns: "Meslo*"
+      register: meslo_files
+  
+    - name: Check if any Maple* files exist in font directory
+      ansible.builtin.find:
+        paths: "{{ font_dest }}"
+        patterns: "Maple*"
+      register: maple_files
+    
+    - name: Ensure font directories exist on Ubuntu/Arch
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      with_items:
+        - $HOME/.local/share/fonts
+      when: ansible_facts['os_family'] == 'Debian' or ansible_facts['os_family'] == 'Archlinux'
+
+    - name: Include Meslo font installation tasks
+      include_tasks: fonts/meslo.yml
+      when: meslo_files.matched == 0
+
+    - name: Include Maple font installation tasks
+      include_tasks: fonts/maple.yml
+      when: maple_files.matched == 0
+
+    - name: Refresh font cache in Ubuntu/Arch
+      ansible.builtin.command:
+        cmd: fc-cache -fv
+      when: ansible_facts['os_family'] == 'Debian' or ansible_facts['os_family'] == 'Archlinux'

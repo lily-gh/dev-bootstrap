@@ -1,0 +1,44 @@
+---
+
+- name: Check for existing conda directories
+  ansible.builtin.shell: ls -d "{{ ansible_env.HOME }}/miniconda" || true
+  register: conda_dirs
+  changed_when: false
+  failed_when: false
+
+- name: Ensure Miniconda directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/miniconda"
+    state: directory
+  when: conda_dirs.stdout == ''
+
+- name: Download Miniconda installer for macOS
+  ansible.builtin.get_url:
+    url: https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh
+    dest: "{{ ansible_env.HOME }}/miniconda/miniconda.sh"
+    mode: '0755'
+  when: conda_dirs.stdout == ''
+
+- name: Run Miniconda installer
+  ansible.builtin.shell: bash "{{ ansible_env.HOME }}/miniconda/miniconda.sh" -b -u -p "{{ ansible_env.HOME }}/miniconda"
+  when: conda_dirs.stdout == ''
+
+- name: Activate Miniconda
+  ansible.builtin.shell: | 
+    source "{{ ansible_env.HOME }}/miniconda/bin/activate"
+    conda init --all
+  when: conda_dirs.stdout == ''
+
+- name: Accept conda terms of service
+  ansible.builtin.shell: |
+    source "{{ ansible_env.HOME }}/miniconda/bin/activate"
+    conda config --set channel_priority strict
+    echo "yes" | conda update conda --yes || true
+  register: conda_tos_result
+  failed_when: false
+  changed_when: conda_tos_result.rc == 0
+
+- name: Remove Miniconda installer
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/miniconda3/miniconda.sh"
+    state: absent

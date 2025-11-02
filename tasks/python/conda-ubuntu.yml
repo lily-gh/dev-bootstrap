@@ -1,0 +1,32 @@
+---
+
+- name: Check for existing conda directories
+  ansible.builtin.shell: ls -d $HOME/*conda* || true
+  register: conda_dirs
+  changed_when: false
+  failed_when: false
+
+- name: Download Miniconda installer
+  ansible.builtin.get_url:
+    url: https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    dest: $HOME/Miniconda3-latest-Linux-x86_64.sh
+    mode: '0755'
+  when: conda_dirs.stdout == ''
+
+- name: Run Miniconda installer
+  ansible.builtin.shell: bash $HOME/Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda
+  when: conda_dirs.stdout == ''
+
+- name: Accept conda terms of service
+  ansible.builtin.shell: |
+    source $HOME/miniconda/bin/activate
+    conda config --set channel_priority strict
+    echo "yes" | conda update conda --yes || true
+  register: conda_tos_result
+  failed_when: false
+  changed_when: conda_tos_result.rc == 0
+
+- name: Remove Miniconda installer
+  ansible.builtin.file:
+    path: $HOME/Miniconda3-latest-Linux-x86_64.sh
+    state: absent

@@ -1,0 +1,66 @@
+---
+
+- name: Add Telegram PPA
+  ansible.builtin.shell: |
+    add-apt-repository ppa:atareao/telegram -y
+  become: true
+
+- name: Download VS Code .deb package
+  ansible.builtin.get_url:
+    url: https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64
+    dest: "{{ ansible_env.HOME }}/Downloads/vscode.deb"
+    mode: '0644'
+
+- name: Install VS Code from .deb package
+  ansible.builtin.apt:
+    deb: "{{ ansible_env.HOME }}/Downloads/vscode.deb"
+    state: present
+  become: true
+
+- name: Remove VS Code .deb package
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/Downloads/vscode.deb"
+    state: absent
+
+- name: Add 1Password GPG key
+  ansible.builtin.shell: |
+    curl -s https://downloads.1password.com/linux/keys/1password.asc | gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
+  args:
+    creates: /usr/share/keyrings/1password-archive-keyring.gpg
+  become: true
+
+- name: Add 1Password repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/1password.list
+    content: "deb [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/amd64 stable main"
+  become: true
+
+- name: Configure any pending dpkg packages
+  ansible.builtin.shell: dpkg --configure -a
+  become: true
+  ignore_errors: yes
+  
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+  become: true
+
+- name: Install apps
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - vlc
+    - telegram
+    - neovim
+  ignore_errors: yes
+  become: true
+
+- name: Install 1Password
+  ansible.builtin.apt:
+    name: 1password
+    state: present
+    install_recommends: no
+  become: true
+  environment:
+    DEBIAN_FRONTEND: noninteractive

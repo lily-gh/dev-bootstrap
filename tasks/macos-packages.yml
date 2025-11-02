@@ -1,0 +1,37 @@
+---
+- name: Check if Homebrew is installed
+  ansible.builtin.command: which brew
+  register: homebrew_check
+  failed_when: false
+  changed_when: false
+
+- name: Install Homebrew
+  include_role:
+    name: geerlingguy.mac.homebrew
+  when: homebrew_check.rc != 0
+
+- name: Ensure Homebrew bin is in PATH
+  ansible.builtin.lineinfile:
+    path: /etc/paths
+    state: present
+    line: '/opt/homebrew/bin'
+  become: true
+  become_user: root
+  when: homebrew_check.rc != 0
+
+- name: Install packages on macOS
+  ansible.builtin.homebrew:
+    name: "{{ item }}"
+  with_items:
+    - bat
+    - ffmpeg
+    - fzf
+    - git
+    - gpg
+    - eza
+    - vim
+    - zsh
+    - zsh-syntax-highlighting
+    - zsh-autosuggestions
+    - ansible
+    - asdf
