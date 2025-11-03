@@ -25,6 +25,7 @@
     - ffmpeg
     - fzf
     - gcc
+    - gpg
     - git
     - eza
     - vim
