@@ -5,6 +5,15 @@
     update_cache: yes
   become: true
 
+- name: Install required packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - curl
+    - gpg
+  become: true
+
 - name: Ensure keyring directory exists
   ansible.builtin.file:
     path: /etc/apt/keyrings
