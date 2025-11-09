@@ -1,18 +1,17 @@
 # Dev Bootstrap
-Automation script and ansible playbooks to easily set up a new computer with my favorite developer tools.
+Easily set up a new computer with developer tools in under 10 minutes.
 
 These automations have been tested on: MacOS, Ubuntu and Arch Linux.
-
   
 ### How to use
-#### On Ubuntu/MacOS
-Download this repository, go to the root folder of the repository and run:
+#### On MacOS/Ubuntu
+[Download this repository](https://github.com/lily-gh/dev-bootstrap/archive/refs/heads/main.zip), go to the root folder of the repository and run:
 
 ```sh
 ./bootstrap.sh
 ```
 
-Enter the `sudo` password when prompted for the `BECOME` password and sit back while ansible does all the hard workf.
+Enter the `sudo` password when prompted for the `BECOME` password and sit back while ansible does all the hard work.
 
 #### On Arch
 Arch usually doesn't come with `unzip` preinstalled, so the best option is to use `bsdtar`, which comes preinstalled, to unzip the downloaded contents. 
@@ -28,7 +27,7 @@ Then run:
 ./bootstrap.sh
 ```
 
-Enter the `sudo` password when prompted for the `BECOME` password and sit back while ansible does all the hard workf.
+Enter the `sudo` password when prompted for the `BECOME` password and sit back while ansible does all the hard work.
 
 
 ### Packages
@@ -58,7 +57,6 @@ The main `bootstrap.sh` script will check if ansible is installed in the system,
 ```sh
 ansible-playbook main.yml --ask-become-pass
 ```
-
 
 When **_I_** (Lily) run the script, I pass in an additional parameter `lily` when running `bootstrap.sh`, this causes the script to execute an additional ansible playbook and uses an additional argument:
 
