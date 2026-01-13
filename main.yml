@@ -25,3 +25,5 @@
 
 - import_playbook: tasks/install-apps.yml
 - import_playbook: tasks/neovim.yml
+
+- import_playbook: tasks/cleaup.yml

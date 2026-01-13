@@ -1,0 +1,13 @@
+---
+- name: Cleanup Tasks
+  hosts: localhost
+  gather_facts: true
+  
+  tasks:
+    - name: Arch Cleanup - remove temporary aur_builder user
+      become: yes
+      ansible.builtin.user:
+        name: aur_builder
+        state: absent
+        remove: yes
+      when: ansible_os_family == "Archlinux"
