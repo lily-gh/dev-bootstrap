@@ -4,6 +4,12 @@
   gather_facts: true
   
   tasks:
+    - name: Arch Cleanup - kill processes owned by aur_builder
+      become: yes
+      ansible.builtin.command: pkill -u aur_builder
+      failed_when: false
+      when: ansible_os_family == "Archlinux"
+
     - name: Arch Cleanup - remove temporary aur_builder user
       become: yes
       ansible.builtin.user:
